@@ -18,15 +18,20 @@ Common way of usage:
 ```ruby
 require 'TestAgent'
 include TestAgent
+# Share folder ./build-result/ via HTTP on some free port:
 artifacts = SharedFolder.new "./build-result/"
-=> Folder ./build-result/ shared via HTTP on some free port
+# Get absollete external url to file named server-videowall-v1.0.1.rpm
+pckg = artifacts.get_file_url("./build-result/serv*")
+
+# Create two VM's: server and test-client0. 
+# Bootstrap Chef client on server with role web-server
+# and option package_url.
 pool = TestPool.new(
-{name: 'server', template: 'opensuse13.2', run_list: 'role[web-server]', options: "{package_url: #{artifacts.get_file_url("serv*")}}"},
-{name: 'test-client0', template: 'win8.1'}
-)
-=> two VM's created: server and test-client0. Chef client bootstrapped on server. Server is configured for role web-server and option package_url set to url of 1-st package starting with serv.
+{name: 'server', template: 'opensuse13.2', run_list: 'role[web-server]', options: "{package_url: #{pckg}}"},
+{name: 'test-client0', template: 'win8.1'} )
+
+# Open VNC connection on test-client0
 pool.init_vnc_screens('test-client0')
-=> VNC connection opened for test-client0.
+# Click on start button on test-client0 (SikuliX method, see http://www.sikulix.com/).
 pool['test-client0'].click('start_button.png')
-=> Click on start button performed on test-client0 (SikuliX method, see http://www.sikulix.com/).
 ```
