@@ -24,7 +24,7 @@ module TestAgent
     ##
     # Get client used to connect to OpenNebula host.
     # @return [OpenNebula::Client] client.
-    def get_client
+    def client
       @@client ||= Client.new(config[:credentials], config[:end_point])
     end
 
@@ -33,7 +33,7 @@ module TestAgent
     # @param vm_id[Int] id of virtual machine.
     # @return [VirtualMachine] OpenNebula virtual machine.
     def locate_vm(vm_id)
-      vm_pool = VirtualMachinePool.new(get_client, -1)
+      vm_pool = VirtualMachinePool.new(client, -1)
       rc = vm_pool.info
       if OpenNebula.is_error?(rc)
         error rc.message
@@ -50,7 +50,7 @@ module TestAgent
     ##
     # Get node`s ip address.
     # @return [String] ip address.
-    def get_ip
+    def ip
       if @ip
         return @ip
       end
@@ -58,7 +58,7 @@ module TestAgent
         warn 'No Vm assigned to locate IP'
         return
       end
-      mac = get_info['VM']['TEMPLATE']['NIC']['MAC']
+      mac = vm_info['VM']['TEMPLATE']['NIC']['MAC']
       20.times do
         debug 'Trying to get IP...'
         out = `echo '#{config[:sudo_pass]}' | sudo -S nmap -sP -n 153.15.248.0/21`
@@ -80,7 +80,7 @@ module TestAgent
         return false
       end
       # TODO: make changes here after switching to newer version of OpenNebula
-      locate_vm(get_id.to_i).finalize
+      locate_vm(id).finalize
       @vm = nil
       @ip = nil
       true
@@ -93,7 +93,7 @@ module TestAgent
     # @return [String] name.
     def initialize(vm_name, template_name)
       @name = vm_name
-      temp_pool = TemplatePool.new(get_client, -1)
+      temp_pool = TemplatePool.new(client, -1)
       rc = temp_pool.info
       if OpenNebula.is_error?(rc)
         error rc.message
@@ -132,7 +132,7 @@ module TestAgent
     ##
     # Get info about opennebula virtual michine associated with that node.
     # @return [Hash] info.
-    def get_info
+    def vm_info
       unless @vm
         warn 'No VM assigned to get info from'
         return
@@ -144,21 +144,21 @@ module TestAgent
     ##
     # Get id of OpenNebula VM associated with that #TestNode.
     # @return [String] id.
-    def get_id
-      get_info['VM']['ID']
+    def id
+      vm_info['VM']['ID'].to_i
     end
 
     ##
     # Get name of chef node associated with that #TestNode.
     # @return [String] name.
-    def get_chef_name
-      "#{@name}_#{get_id}"
+    def chef_name
+      "#{name}_#{id}"
     end
 
     ##
     # Get name given at creation.
     # @return [String] name.
-    def get_name
+    def name
       @name
     end
 
@@ -200,11 +200,11 @@ module TestAgent
       options[:ssh_password] ||= '11111111'
       debug 'Bootstrapping...'
       i = 30
-      while i && !is_port_open?(get_ip, '22')
+      while i && !is_port_open?(ip, '22')
         i -= 1
         sleep(15)
       end
-      cmd = "knife bootstrap #{get_ip} -P #{options[:ssh_password]} -N #{get_chef_name} --config #{config[:knife_config_path]}"
+      cmd = "knife bootstrap #{ip} -P #{options[:ssh_password]} -N #{chef_name} --config #{config[:knife_config_path]}"
       if options[:run_list]
         cmd += " -r '#{options[:run_list]}'"
       end
@@ -235,15 +235,15 @@ module TestAgent
         warn 'No VM initialized'
         return false
       end
-      info = get_info
-      while [0,1,2].include? info['VM']['LCM_STATE'].to_i #wait while vm is waiting for instantiating
+      inf = vm_info
+      while [0,1,2].include? inf['VM']['LCM_STATE'].to_i #wait while vm is waiting for instantiating
         sleep 10
-        info = get_info
+        inf = vm_info
       end
-      info['VM']['STATE'].to_i == 3 # state 3 - VM is running
+      inf['VM']['STATE'].to_i == 3 # state 3 - VM is running
     end
 
-    private :is_port_open?, :delete_vm, :get_client, :locate_vm
+    private :is_port_open?, :delete_vm, :client, :locate_vm
 
     # TODO: add some method to allow changing Chef runlist during testing
   end

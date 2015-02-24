@@ -93,7 +93,7 @@ module TestAgent
         return false
       end
       address_array = nodes.map do |name, el|
-        a = "#{config[:opennebula_ip]}:#{5900 + el.get_id.to_i}"
+        a = "#{config[:opennebula_ip]}:#{5900 + el.id}"
         debug "Node address: #{a}"
         a
       end
