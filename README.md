@@ -21,7 +21,7 @@ include TestAgent
 # Share folder ./build-result/ via HTTP on some free port:
 artifacts = SharedFolder.new "./build-result/"
 # Get absollete external url to file named server-videowall-v1.0.1.rpm
-pckg = artifacts.get_file_url("./build-result/serv*")
+pckg = artifacts.get_file_url("./serv*")
 
 # Create two VM's: server and test-client0. 
 # Bootstrap Chef client on server with role web-server
