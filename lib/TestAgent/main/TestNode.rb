@@ -50,6 +50,7 @@ module TestAgent
     ##
     # Get node`s ip address.
     # @return [String] ip address.
+    # TODO: improve that method (setup a dhcp server and make it's table accessible outside)
     def ip
       if @ip
         return @ip

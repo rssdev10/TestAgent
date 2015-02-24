@@ -48,11 +48,11 @@ module TestAgent
 
     ##
     # Creates a HTTP url to some file inside folder
-    # @param file_path [String] path to file in local filesystem
+    # @param file_path [String] path to file relative to shared directory (e.g. './lib/*.rb')
     # @param ip_regexp [Regexp] regular expression used to choose net interface
-    def get_file_url(file_path, ip_regexp = /^153.*/)
-      ip = Socket.ip_address_list.detect{ |intf| intf.ip_address =~ ip_regexp }.ip_address
-      files = Dir.glob(file_path)
+    def file_url(file_path, ip_regexp = /^153.*/)
+      ip = Socket.ip_address_list.detect{ |int| int.ip_address =~ ip_regexp }.ip_address
+      files = Dir.glob(File.expand_path(@path) + '/' + file_path)
       if files.size < 1
         warn "No file found by path #{file_path}"
         return
@@ -60,7 +60,7 @@ module TestAgent
       if files.size > 1
         warn 'More than one file found by that path, using first'
       end
-      absolute_path = Pathname.new(File.expand_path(files.first))
+      absolute_path = Pathname.new(files[0])
       project_root  = Pathname.new(File.expand_path(@path))
       relative = absolute_path.relative_path_from(project_root)
       "http://#{ip}:#{@port}/#{relative}"
