@@ -7,6 +7,7 @@ module TestAgent
   class TestNode
     include OpenNebula
     include TestAgentConfig
+    include TestAgentLogger
 
     ##
     # Add methods from SikuliScreen class (click, type etc)
