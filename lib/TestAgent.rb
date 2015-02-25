@@ -5,6 +5,7 @@ require 'OpenNebula'
 require 'socket'
 require 'pathname'
 require 'logger'
+require 'time'
 
 # Internal modules and classes
 require 'TestAgent/version'
