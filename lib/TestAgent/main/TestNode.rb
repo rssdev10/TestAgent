@@ -93,7 +93,7 @@ module TestAgent
     # @param vm_name [String] part of machine`s name in OpenNebula (second part is timestamp).
     # @param template_name [String] template used to instantiate new virtual machine.
     # @return [String] name.
-    def initialize(vm_name, template_name)
+    def initialize(vm_name, template_name, auto_destruct_vm = true)
       @name = vm_name
       temp_pool = TemplatePool.new(client, -1)
       rc = temp_pool.info
@@ -128,7 +128,7 @@ module TestAgent
         return nil
       end
       @vm = vir_mac
-      ObjectSpace.define_finalizer(self, proc {delete_vm})
+      ObjectSpace.define_finalizer(self, proc {delete_vm}) if auto_destruct_vm
     end
 
     ##
